@@ -51,6 +51,7 @@ def parse_m8_to_template_hits(
     query_sequence: str,
     m8_path: Path,
     template_cif_folder: Path | None = None,
+    local_template: Path | None = None
 ) -> Iterator[TemplateHit]:
     assert m8_path.is_file()
 
@@ -61,11 +62,11 @@ def parse_m8_to_template_hits(
 
     # Subset to those matching the query pdb id
     table = table.loc[table.query_id.astype(str) == query_pdb_id]
-    if len(table) == 0:
+    if len(table) == 0 and local_template is None:
         logger.warning(f"[{query_pdb_id=}] No corresponding entries in {m8_path=}")
         return  # No hits
 
-    assert table.query_id.nunique() == 1
+    assert table.query_id.nunique() == 1 if local_template is None else 1
 
     # start and ends are 1-indexed in the input table
     # update the starts to be 0 indexed w.t. the indexing becomes 0-index half open
@@ -78,14 +79,17 @@ def parse_m8_to_template_hits(
     for i, row in enumerate(table.itertuples()):
         hit_identifier, hit_chain = row.subject_id.split("_")  # type: ignore
         assert isinstance(hit_identifier, str) and isinstance(hit_chain, str)
-        with TemporaryDirectory() as tmpdir:
-            cif_file = rcsb.download_cif_file(
-                hit_identifier.upper(),
-                directory=(
-                    Path(tmpdir) if template_cif_folder is None else template_cif_folder
-                ),
-            )
-            structure = gemmi.read_structure(path=str(cif_file))
+        if local_template:
+            cif_file = template_cif_folder / local_template
+        else:
+            with TemporaryDirectory() as tmpdir:
+                cif_file = rcsb.download_cif_file(
+                    hit_identifier.upper(),
+                    directory=(
+                        Path(tmpdir) if template_cif_folder is None else template_cif_folder
+                    ),
+                )
+        structure = gemmi.read_structure(path=str(cif_file))
 
         chain: gemmi.Chain = structure[0][hit_chain]  # Indexes by auth chain
         # NOTE this sequence excludes unresolved residues, and adds "-" to indicate gap

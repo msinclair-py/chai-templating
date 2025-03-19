@@ -330,6 +330,7 @@ def get_template_context(
     template_hits_m8: Path,
     use_sequence_hash_for_lookup: bool = False,
     template_cif_cache_folder: Path | None = None,
+    local_template: Path | None = None
 ) -> TemplateContext:
     """
     For each example, loads templates for cropped chain, collate the templates.
@@ -373,6 +374,7 @@ def get_template_context(
                 chain.entity_data.sequence,
                 template_hits_m8,
                 template_cif_folder=template_cif_cache_folder,
+                local_template=local_template
             )
             # Load the template data
             loaded_templates = get_template_data(

@@ -333,6 +333,7 @@ def make_all_atom_feature_context(
     constraint_path: Path | None = None,
     use_templates_server: bool = False,
     templates_path: Path | None = None,
+    local_template: Path | None = None,
     esm_device: torch.device = torch.device("cpu"),
 ):
     assert not (
@@ -418,6 +419,7 @@ def make_all_atom_feature_context(
             use_sequence_hash_for_lookup=use_templates_server,
             template_hits_m8=templates_path,
             template_cif_cache_folder=output_dir / "templates",
+            local_template=local_template
         )
 
     # Load ESM embeddings
@@ -491,6 +493,7 @@ def run_inference(
     constraint_path: Path | None = None,
     use_templates_server: bool = False,
     template_hits_path: Path | None = None,
+    local_template_cif: Path | None = None,
     # Parameters controlling how we do inference
     recycle_msa_subsample: int = 0,
     num_trunk_recycles: int = 3,
@@ -519,6 +522,7 @@ def run_inference(
         constraint_path=constraint_path,
         use_templates_server=use_templates_server,
         templates_path=template_hits_path,
+        local_template=local_template_cif,
         esm_device=torch_device,
     )
 
